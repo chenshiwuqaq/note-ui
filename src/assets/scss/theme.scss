@@ -1,0 +1,73 @@
+// scss样式
+$themes: (
+        light: (
+                background_color: #fdfbfb,//背景色
+                text-color: #80A492, // 主文本色
+                background_color_leftNav: #F1F1F1,
+                background_color_shadow: #B7CAC1,
+                background_color_border: #DCDFE6,
+                background_color_file: #efefef,
+                border_style: 1px solid #DCDFE6,
+        ),
+        dark: (
+                background_color: #1E1E1E,//背景
+                text-color: #5D8351, // 主文本色
+                background_color_leftNav: #333434,
+                background_color_shadow: #4E6048,
+                background_color_border: #424342,
+                background_color_file: #424342,
+                border_style: 1px solid #424342,
+        )
+);
+
+// 处理样式，遍历主题map
+@mixin themeify {
+  @each $theme-name, $theme-map in $themes {
+    //!global 把局部变量提升为全局变量
+    $theme-map: $theme-map !global;
+    //判断html的data-theme的属性值  #{}是sass的插值表达式
+    //& sass嵌套里的父容器标识   @content是混合器插槽，像vue的slot
+    [data-theme="#{$theme-name}"] & {
+      @content;
+    }
+  }
+}
+//声明一个根据Key获取颜色的function
+@function themed($key) {
+  @return map-get($theme-map, $key);
+}
+
+// 获取颜色
+@mixin background_color($color) {
+  @include themeify {
+    background: themed($color)!important;
+  }
+}
+//获取字体颜色
+@mixin font_color($color) {
+  @include themeify {
+    color: themed($color)!important;
+  }
+}
+
+//获取容器border单边颜色
+@mixin inset_border($borderKey, $side) {
+  @include themeify {
+    border-#{$side}: themed($borderKey) !important;
+  }
+}
+
+//获取容器border四边颜色
+@mixin inset_border_all($borderKey) {
+  @include themeify {
+    border: themed($borderKey) !important;
+  }
+}
+
+//获取btn颜色
+@mixin btn_color($color) {
+  @include themeify {
+    color: themed($color)!important;
+    border-color: themed($color) !important;
+  }
+}

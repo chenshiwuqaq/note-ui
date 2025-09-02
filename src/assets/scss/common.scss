@@ -1,0 +1,102 @@
+@import '@/assets/scss/theme';
+// 模式切换
+$themes: (
+        light: (
+                background_color: #fdfbfb, //背景色
+                text-color: #80A492, // 主文本色
+                background_color_leftNav: #F1F1F1, //左侧导航栏背景色
+                background_color_shadow: #B7CAC1, //导航栏点击阴影色
+                background_color_border: #DCDFE6, //border
+                background_color_file: #efefef, //文件背景色
+                background_color_btn: #F2F6F4, //按钮背景色
+                background_color6: #f4f7fd, //背景色
+                background_color7: rgba(255, 255, 255, 1), //#ffffff,//背景色
+                background_color8: #ffffff, //#ffffff,//背景色
+                background_color9: #cccccc, //#ffffff,//背景色
+                text-color1: #fdfbfb, // 主文本色1
+                text-color2: #999, // 主文本色2
+                text-color3: #666, // 主文本色3
+                text-color-hover: #317adf, // hover文本色
+                border_style: 1px solid #DCDFE6, // 单边边框色
+                border_style_all: 1px solid #DCDFE6, // 四边边框色
+                border_style2: 1px solid skyblue, // 主边框色2
+                border_style3: 1px solid #ebeef5, // 主边框色3
+                border_style4: 1px solid #ebeef5, // 主边框色4
+                border_bottom_style: 1px solid #f4f4f4, // 下边框色
+                border_bottom_style1: 1px solid #f6f6f6, // 下边框色1
+                border_right_style: 1px solid #f1f1f1, // 右边框色
+                border_top_style: 1px solid #f1f1f1, // 上边框色  (未使用)
+                box_shadow: 0 1px 3px 0 #ddd, // 主阴影
+        ),
+        dark: (
+                background_color: #1E1E1E, //背景
+                text-color: #5D8351, // 主文本色
+                background_color_leftNav: #333434, //左侧导航栏背景色
+                background_color_shadow: #4E6048, //导航栏点击阴影色
+                background_color_border: #424342, //border
+                background_color_file: #424342, //文件背景色
+                background_color_btn: #242823, //按钮背景色
+                background_color6: #1e1e1e, //背景6
+                background_color7: #181c27, //rgba(0, 0, 0, 0.35),//背景
+                background_color8: #1e2028, //rgba(0, 0, 0, 0.35),//背景
+                background_color9: #333333, //rgba(0, 0, 0, 0.35),//背景
+                text-color1: rgba(255, 255, 255, 0.65), // 文本色1
+                text-color2: #999, // 主文本色2
+                text-color3: #aaa, // 主文本色3
+                text-color-hover: #f1cb64, // hover文本色
+                border_style: 1px solid #424342, // 边框色
+                border_style_all: 1px solid #424342, // 四边边框色
+                border_style2: 1px solid #666666, // 边框色2
+                border_style3: 1px solid #333333, // 边框色3
+                border_style4: 1px solid #333333, // 边框色4
+                border_bottom_style: 1px solid #252526, // 下边框色
+                border_bottom_style1: 1px solid #1e1e1e, // 下边框色1
+                border_right_style: 1px solid #252526, // 右边框色
+                border_top_style: 1px solid #252526, // 上边框色
+                box_shadow: 0 1px 3px 0 #181c27, // 主阴影
+        )
+);
+
+.el-tree-node__content:hover {
+  @include background_color('background_color_file');
+}
+
+.el-tree--highlight-current .el-tree-node.is-current > .el-tree-node__content {
+  @include background_color('background_color_file');
+}
+
+.el-upload-dragger {
+  @include font_color('text-color');
+  @include inset_border_all('border_style_all');
+}
+
+.el-radio-button.is-active .el-radio-button__original-radio:not(:disabled)+.el-radio-button__inner {
+  @include inset_border_all('border_style_all');
+  @include background_color('background_color_shadow');
+}
+
+.el-radio-button__inner {
+  @include inset_border_all('border_style_all');
+}
+
+.el-radio-button__inner:hover {
+  @include font_color('text-color');
+}
+
+.el-button:hover {
+  @include background_color('background_color_btn');
+}
+
+.el-checkbox__input.is-checked+.el-checkbox__label {
+  @include font_color('text-color');
+}
+
+.el-checkbox__inner {
+  @include inset_border_all('border_style_all');
+}
+
+.el-checkbox__input.is-checked .el-checkbox__inner {
+  @include inset_border_all('border_style_all');
+  @include background_color('background_color_shadow');
+
+}
