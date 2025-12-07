@@ -14,11 +14,20 @@
         ref="formRef"
         style="margin-top: 30px"
       >
-        <el-form-item label="账号" class="custom-label" >
-          <el-input id="account_input" v-model="form.account" />
+        <el-form-item class="custom-label" prop="account">
+          <el-input
+              id="account_input"
+              v-model="form.account"
+              placeholder="请输入账号/手机号/邮箱"
+          />
         </el-form-item>
-        <el-form-item label="密码" class="custom-label">
-          <el-input id="password_input" v-model="form.password" type="password" />
+        <el-form-item class="custom-label" prop="password">
+          <el-input
+              id="password_input"
+              v-model="form.password"
+              placeholder="请输入密码"
+              type="password"
+          />
         </el-form-item>
         <div class="submit">
           <el-form-item>
