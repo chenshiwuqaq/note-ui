@@ -16,11 +16,21 @@ export const useAuthStore = defineStore('auth', () => {
     router.push('/login')
   }
 
+  const cityName = ref<string>('重庆 重庆');
+  const weatherCode = ref<string>('101040100');
+
+  const setCityInfo = (name: string, code: string) => {
+    cityName.value = name;
+    weatherCode.value = code;
+  }
   const isAuthenticated = computed(() => !!token.value)
 
   return {
     token,
+    cityName,
+    weatherCode,
     setToken,
+    setCityInfo,
     clearToken,
     isAuthenticated
   }

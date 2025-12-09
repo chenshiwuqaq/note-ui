@@ -9,11 +9,11 @@
     </div>
 
     <div v-else>
-      <h2 class="title">实时天气</h2>
+      <h2 class="title">{{ cityName }}</h2>
 
       <div class="forecast-container">
         <div class="current-weather">
-          <div class="city">{{ weather.now.name }}</div>
+          <div class="city">{{}}</div>
           <div class="condition">当前 {{ weather.now.text }}</div>
           <div class="temperature">
             室外温度：{{ weather.now.temp }}°C
@@ -25,7 +25,7 @@
             :key="index"
         >
           <div class="forecast-date">{{ formatDate(day.fxDate) }}</div>
-          <div class="forecast-icon">{{ day.textDay }}</div>
+          <div class="forecast-icon">{{ getWeatherIcon(day.textDay)  }}</div>
           <div class="forecast-temperature">
             {{ day.tempMax }}°C / {{ day.tempMin }}°C
           </div>
@@ -37,6 +37,7 @@
 
 <script>
 import axios from "axios";
+import { useAuthStore } from '@/store/auth'; // 引入 auth store
 
 export default {
   name:"Weather",
@@ -47,8 +48,39 @@ export default {
         days: []
       },
       loading: true,
-      error: null
+      error: null,
+      weatherCode: '',
+      cityName: '',
+      authStore: useAuthStore() // 将 store 实例挂载到 this 上
     };
+  },
+  // 在 created 钩子中初始化 weatherCode
+  created() {
+    this.weatherCode = this.authStore.weatherCode;
+    this.cityName = this.authStore.cityName;
+  },
+  // 监听 store 中 weatherCode 的变化
+  watch: {
+    // 监听 authStore 实例上的 weatherCode 属性
+    'authStore.weatherCode': {
+
+      handler(newCode) {
+        console.log('天气编码变化:', newCode); // 检查是否打印新编码
+        if (newCode) {
+          this.weatherCode = newCode;
+          this.fetchWeather();
+        }
+      },
+      immediate: true // 立即执行一次
+    },
+    // 新增监听城市名变化
+    'authStore.cityName': {
+      handler(newName) {
+        console.log('城市名变化:', newName);
+        this.cityName = newName;
+      },
+      immediate: true
+    }
   },
   mounted() {
     this.fetchWeather();
@@ -56,20 +88,37 @@ export default {
   methods: {
     async fetchWeather() {
       const apiKey = process.env.VITE_QWEATHER_KEY;
+      // 如果没有 weatherCode，则不发起请求
+      if (!this.weatherCode) {
+        this.error = "未获取到城市ID";
+        this.loading = false;
+        return;
+      }
       try {
         // 获取当前天气
         const currentResponse = await axios.get(
             "https://devapi.qweather.com/v7/weather/now",
             {
               params: {
-                location: "101040100",
+                location: this.weatherCode,
                 key: "6b6ae2eec2204b22b5313a7d4f381156"
               }
             }
         );
-
+        console.log("Current weather:", currentResponse.data)
+        // 处理和风天气API返回的错误码
         if (currentResponse.data.code !== "200") {
-          throw new Error(`请求失败：${currentResponse.data.message}`);
+          const errorMessages = {
+            "400": "请求参数错误，请检查城市设置",
+            "401": "天气服务授权失败",
+            "403": "天气服务权限不足",
+            "404": "未找到该城市的天气信息",
+            "500": "天气服务服务器错误",
+            "502": "天气服务暂时不可用",
+            "503": "天气服务过载，请稍后再试"
+          };
+          throw new Error(errorMessages[currentResponse.data.code] ||
+              `天气查询失败：${currentResponse.data.message || '未知错误'}`);
         }
 
         this.weather = currentResponse.data;
@@ -79,19 +128,40 @@ export default {
             "https://devapi.qweather.com/v7/weather/3d",
             {
               params: {
-                location: "101040100",
+                location: this.weatherCode,
                 key: "6b6ae2eec2204b22b5313a7d4f381156"
               }
             }
         );
 
         if (forecastResponse.data.code !== "200") {
-          throw new Error(`请求失败：${forecastResponse.data.message}`);
+          // 复用上面定义的错误信息映射
+          const errorMessages = {
+            "400": "请求参数错误，请检查城市设置",
+            "401": "天气服务授权失败",
+            "403": "天气服务权限不足",
+            "404": "未找到该城市的天气信息",
+            "500": "天气服务服务器错误",
+            "502": "天气服务暂时不可用",
+            "503": "天气服务过载，请稍后再试"
+          };
+          throw new Error(errorMessages[forecastResponse.data.code] ||
+              `天气预报查询失败：${forecastResponse.data.message || '未知错误'}`);
         }
 
         this.forecast.days = forecastResponse.data.daily;
-      } catch (error) {
-        this.error = error.message;
+      } catch (error)  {
+        // 处理网络错误和其他异常
+        if (error.response) {
+          // 处理HTTP状态码错误
+          this.error = `天气服务异常 (${error.response.status})，请稍后再试`;
+        } else if (error.request) {
+          // 处理无响应错误
+          this.error = "无法连接到天气服务，请检查网络";
+        } else {
+          // 处理其他错误（包括我们主动抛出的错误）
+          this.error = error.message;
+        }
       } finally {
         this.loading = false;
       }
@@ -102,14 +172,27 @@ export default {
     },
     refreshWeather() {
       this.fetchWeather();
-    }
+    },
+    // 获取天气图标
+    getWeatherIcon(weatherText) {
+      const iconMap = {
+        '晴': '☀️',
+        '多云': '⛅',
+        '阴': '☁️',
+        '小雨': '🌧️',
+        '雪': '❄️',
+        '雷阵雨': '⛈️',
+        '雾': '🌫️'
+      };
+      return iconMap[weatherText] || '🌤️';
+    },
   }
 };
 </script>
 
 <style scoped>
 .weather-container {
-  width: 500px;
+  width: 550px;
   height: 200px;
   margin: 0 auto;
   font-family: "Segoe UI", sans-serif;
@@ -179,6 +262,7 @@ export default {
   background-color: #F1F1F1;
   padding: 15px;
   border-radius: 8px;
+  min-width: 85px;
   margin: 0 5px;
   text-align: center;
 }

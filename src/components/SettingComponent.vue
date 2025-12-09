@@ -46,11 +46,22 @@
           <span class="setting-tip">说明会在首页显示</span>
         </el-form-item>
         <el-form-item label="天气预报城市" prop="region">
-          <el-select v-model="ruleForm.region" placeholder="选择城市" :prefix-icon="MostlyCloudy">
-            <el-option label="上海" value="shanghai"/>
-            <el-option label="北京" value="beijing"/>
+          <el-select
+              v-model="ruleForm.region"
+              placeholder="搜索并选择城市"
+              :prefix-icon="MostlyCloudy"
+              filterable
+              :remote-method="handleRemoteSearch"
+              :loading="loadingCities"
+          >
+            <el-option
+                v-for="item in filteredCities"
+                :key="item.weatherCode"
+                :label="item.name"
+                :value="item.name"
+            />
           </el-select>
-          <span class="setting-tip">城市天气会在首页显示</span>
+          <span class="setting-tip">可直接输入进行搜索，城市天气会在首页显示</span>
         </el-form-item>
         <el-form-item class="submit-btn-item">
           <el-button type="primary" @click="submitForm(ruleFormRef)" style="background-color: #B8CAC1">保存</el-button>
@@ -88,6 +99,12 @@ import {ElMessage} from 'element-plus'
 import axios from "axios";
 import { useRoute } from 'vue-router'
 import {useAuthStore} from "@/store/auth";
+interface City {
+  name: string;
+  weatherCode: string;
+}
+const loadingCities = ref(false);
+const filteredCities = ref<City[]>([]);
 
 const formSize = ref<ComponentSize>('default')
 const ruleFormRef = ref<FormInstance>()
@@ -100,6 +117,30 @@ const authStore = useAuthStore();
 const token = ref(authStore.token);
 const Account = ref("");
 
+const cityList = ref<City[]>([]);
+const weatherCode = ref('101040100'); // 默认城市编码，例如重庆
+
+// 远程搜索处理函数
+const handleRemoteSearch = async (query: string) => {
+  if (!query) {
+    filteredCities.value = [];
+    return;
+  }
+
+  loadingCities.value = true;
+  try {
+    // 假设后端提供城市搜索接口，这里使用模拟数据
+    const response = await axios.get('http://localhost:8001/api/user/search', {
+      params: { keyword: query }
+    });
+    filteredCities.value = response.data.data as City[];
+  } catch (error) {
+    console.error('城市搜索失败:', error);
+    ElMessage.error('城市搜索失败');
+  } finally {
+    loadingCities.value = false;
+  }
+};
 // 获取账户信息
 const getAccount = async () => {
   if (!token.value) {
@@ -133,13 +174,22 @@ const refresh = async (account: string) => {
       params: { account: Account.value }
     });
     const data = response.data.data;
-    if (data) {
-      ruleForm.account = data.account;
-      ruleForm.userName = data.userName || '';
-      ruleForm.remark = data.remark || '';
-      ruleForm.region = data.region || '';
-      ruleForm.password = data.password || '';
+    if (data&&data.user) {
+      ruleForm.account = data.user.account;
+      ruleForm.userName = data.user.userName || '';
+      ruleForm.remark = data.user.remark || '';
+      ruleForm.region = data.user.region || '';
+      ruleForm.password = data.user.password || '';
       console.log('更新后的表单数据:', ruleForm);
+      cityList.value = data.cities as City[]; // 类型断言（确保 TypeScript 认可）
+      filteredCities.value = [...cityList.value]; // 初始化过滤列表
+      //在cityList中遍历找到region，并将weatherId取出用于首页实时天气的显示
+      const selectCity = cityList.value.find(city => city.name === data.user.region);
+      if(selectCity){
+        authStore.setCityInfo(selectCity.name, selectCity.weatherCode);
+      }else{
+        console.warn(`在城市列表中未找到城市: ${data.user.region}，将使用默认编码(重庆 重庆)`);
+      }
     } else {
       console.error('返回的用户数据为空');
       ElMessage.warning('未获取到用户数据');
@@ -249,6 +299,11 @@ const submitForm = async (formEl: any) => {
         
         await axios.put('http://localhost:8001/api/user/update', userInfoDTO);
         ElMessage.success('用户信息修改成功！');
+        // 主动更新天气编码
+        const selectCity = cityList.value.find(city => city.name === ruleForm.region);
+        if (selectCity) {
+          authStore.setCityInfo(selectCity.name, selectCity.weatherCode);
+        }
       } catch (error) {
         console.error('修改失败:', error);
         ElMessage.error('修改失败，请稍后再试');
