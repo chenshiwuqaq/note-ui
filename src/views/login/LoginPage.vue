@@ -14,16 +14,25 @@
         ref="formRef"
         style="margin-top: 30px"
       >
-        <el-form-item label="账号" label-class="custom-label">
-          <el-input id="account_input" v-model="form.account" />
+        <el-form-item class="custom-label" prop="account">
+          <el-input
+              id="account_input"
+              v-model="form.account"
+              placeholder="请输入账号/手机号/邮箱"
+          />
         </el-form-item>
-        <el-form-item label="密码">
-          <el-input id="password_input" v-model="form.password" type="password" />
+        <el-form-item class="custom-label" prop="password">
+          <el-input
+              id="password_input"
+              v-model="form.password"
+              placeholder="请输入密码"
+              type="password"
+          />
         </el-form-item>
         <div class="submit">
           <el-form-item>
-            <el-button type="primary" @click="onSubmit" class="function">登录</el-button>
-            <el-button @click="toRegister" class="function" style="margin-left: 90px">注册</el-button>
+            <el-button type="primary" @click="onSubmit" class="function-log">登录</el-button>
+            <el-button @click="toRegister" class="function-reg" style="margin-left: 70px">注册</el-button>
           </el-form-item>
         </div>
       </el-form>
@@ -78,12 +87,9 @@ const onSubmit = async () => {
 </script>
 
 <style scoped>
-.el-form-item__label {
+.custom-label{
+  font-weight: bold;
   font-size: 18px;
-  color: black;
-}
-.el-form-item{
-  margin-top: 20px;
 }
 .login-box {
   justify-content: center;
@@ -92,7 +98,7 @@ const onSubmit = async () => {
 }
 
 .login-container {
-  background: linear-gradient(135deg, #FFEEAD 0%, #D4EE9F 100%);
+  background: linear-gradient(135deg, #fdf9db 0%, rgba(203, 243, 119, 0.76) 100%);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -104,9 +110,9 @@ const onSubmit = async () => {
 
 /* 登录框 */
 .login-box {
-  height: 300px;
+  height: 350px;
   width: 300px;
-  background: rgba(255, 255, 255, 0.3);
+  background: white;
   padding: 40px;
   border-radius: 15px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
@@ -117,12 +123,21 @@ const onSubmit = async () => {
 .submit {
 }
 
-.function{
-  width: 80px;
+.function-log{
+  width: 90px;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.3s;
+  background-color: #63a35c;
+}
+.function-reg{
+  width: 90px;
   border-radius: 5px;
   transition: background-color 0.3s, transform 0.3s;
 }
-.function:hover {
+.function-log:hover {
+  transform: scale(1.05); /* 悬停时的缩放效果 */
+}
+.function-reg:hover .function-reg:hover{
   transform: scale(1.05); /* 悬停时的缩放效果 */
 }
 .el-alert {

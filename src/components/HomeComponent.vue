@@ -2,7 +2,7 @@
   <el-container class="dashboard">
     <el-header class="header">
       <div class="header-content">
-        <span class="title">欢迎回家</span>
+        <span class="title">欢迎回家，tqy</span>
       </div>
     </el-header>
 
