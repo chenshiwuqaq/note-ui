@@ -114,7 +114,7 @@ const closeMenu = () => {
 </style>
 
 <style lang="scss" scoped>
-@import "@/assets/scss/common.scss";
+@import "@/assets/scss/common";
 .add-node-menu {
   @include background_color('background_color');
   @include inset_border_all('border_style_all');

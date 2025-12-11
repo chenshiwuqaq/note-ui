@@ -192,16 +192,16 @@
 </template>
 
 <script lang="ts" setup>
-import DragBox from "@/components/DragBox.vue";
-import DragItem from "@/components/DragItem.vue";
+import DragBox from "@/components/otherComponent/DragBox.vue";
+import DragItem from "@/components/otherComponent/DragItem.vue";
 import { Fold, Folder, FolderAdd, Refresh, Search } from "@element-plus/icons-vue";
 import { onMounted, onUnmounted, ref, watch, computed } from "vue";
 import type { UploadProps, UploadUserFile, UploadFile, UploadFiles } from "element-plus";
 import { ElMessage, ElImageViewer } from "element-plus";
-import NewNodeMenu from "@/components/NewNodeMenu.vue";
+import NewNodeMenu from "@/components/otherComponent/NewNodeMenu.vue";
 import axios from 'axios';
 import type { AxiosInstance } from 'axios';
-import MenuCard from "@/components/MenuCard.vue";
+import MenuCard from "@/components/otherComponent/MenuCard.vue";
 import { ElUpload } from 'element-plus';
 import type { AxiosResponse } from 'axios';
 import { createApp, h } from 'vue';

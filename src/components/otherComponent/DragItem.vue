@@ -39,7 +39,7 @@ const props = defineProps({
 </style>
 
 <style lang="scss">
-@import "@/assets/scss/theme.scss";
+@import "@/assets/scss/theme";
 .resize {
   @include background_color('background_color_border');
 }

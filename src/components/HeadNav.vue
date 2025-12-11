@@ -65,7 +65,6 @@ const toggleComponent = () => {
 .head-nav {
     margin: 5px auto;
 }
-
 .head-nav-right {
     display: flex;
     float: right;
@@ -73,10 +72,11 @@ const toggleComponent = () => {
 
 .icon-head-nav {
     cursor: pointer;
-    font-size: 16px;
+    font-size: 20px;
     padding: 5px;
     border-radius: 10px;
 }
+
 </style>
 
 <style lang="scss">

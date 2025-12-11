@@ -18,36 +18,29 @@
             <Weather></Weather>
         </el-col>
 
-        <el-col :span="5">
-          <el-card class="box-card" shadow="never">
+        <el-col :span="4">
+          <el-card class="box-card" shadow="never" style=" border: none;">
             <img src="../assets/imgs/GULULU-魔法球.png" alt="Avatar" class="avatar"/>
           </el-card>
         </el-col>
 
-<!--        <el-col :span="5">-->
-<!--          <el-card class="box-card" shadow="never">-->
-<!--            <div slot="header" class="clearfix">-->
-<!--              <span>文章收藏</span>-->
-<!--            </div>-->
-<!--            <div class="article-star">-->
-<!--              &lt;!&ndash;              <el-list>&ndash;&gt;-->
-<!--              &lt;!&ndash;                <el-list-item v-for="item in articleStars" :key="item.name">&ndash;&gt;-->
-<!--              &lt;!&ndash;                  {{ item.name }}&ndash;&gt;-->
-<!--              &lt;!&ndash;                </el-list-item>&ndash;&gt;-->
-<!--              &lt;!&ndash;              </el-list>&ndash;&gt;-->
-<!--            </div>-->
-<!--          </el-card>-->
-<!--        </el-col>-->
+        <el-col :span="6">
+          <el-card class="box-card" shadow="never">
+            <div class="article-star">
+              <collected-articles :collected-articles="CollectedArticleList" />
+            </div>
+          </el-card>
+        </el-col>
       </el-row>
 
       <el-row :gutter="10" class="mt-20">
-        <el-col :span="19">
+        <el-col :span="18">
           <el-card class="box-card" shadow="never">
             <WordCountView v-if="Account" :account="Account"></WordCountView>
           </el-card>
         </el-col>
 
-        <el-col :span="5">
+        <el-col :span="6">
 <!--          <el-card class="box-card" shadow="never">-->
 <!--            <div slot="header" class="clearfix">-->
 <!--              <span>专题收藏</span>-->
@@ -55,8 +48,14 @@
 <!--          </el-card>-->
           <el-card class="box-card" shadow="never">
             <div slot="header" class="clearfix">
-              <span>待办事项</span>
+              <span>今日待办</span>
             </div>
+            <el-table :data="TodayTodoData" style="width: 100%" height="310">
+              <el-table-column prop="taskTitle" label="标题" width="100" />
+              <el-table-column prop="taskContent" label="内容" width="120" />
+              <el-table-column prop="priority" label="优先级" width="100" />
+              <el-table-column prop="endTime" label="截止日期" width="120" />
+            </el-table>
           </el-card>
         </el-col>
       </el-row>
@@ -67,17 +66,42 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import DateTimeDisplay from '../views/main/DateTimeDisplay.vue';
-import WebSiteStar from "@/views/WebsiteStar";
 import WordCountView from "@/views/WordCountView";
 import Weather from "@/views/weather/Weather";
 import { useAuthStore } from "@/store/auth";
 import axios from "axios";
 import { ElMessage } from "element-plus";
 import router from "@/router";
+import CollectedArticles from "@/components/otherComponent/collected-articles.vue";
 const authStore = useAuthStore();
 const token = ref(authStore.token);
 const Account = ref("");
 const username = ref("");
+const CollectedArticleList = ref([]);
+const TodayTodoData = ref([])
+
+const getCollectedArticleList= async() =>{
+  try {
+    const res = await axios.get('http://localhost:8003/editor/getAllCollectedNode',{
+      params: { account: Account.value}
+    })
+    console.log(res.data.data)
+    CollectedArticleList.value = res.data.data || []
+  }catch (error){
+    ElMessage.error('获取收藏文章失败')
+  }
+}
+const getTodayTodoData = async () =>{
+  try {
+    const res = await axios.get('http://localhost:8000/todo/getTodayTodoByAccount',{
+      params: { account: Account.value}
+    })
+    console.log(res.data.data)
+    TodayTodoData.value = res.data.data || []
+  }catch (error){
+    ElMessage.error('获取今日待办失败')
+  }
+}
 const getAccount = async () => {
   if (!token.value) {
     console.error('Token为空');
@@ -111,15 +135,13 @@ onMounted(async () => {
     }).then(res => {
       username.value = res.data.data;
     })
+    await getTodayTodoData();
+    await getCollectedArticleList();
   }
   else {
     ElMessage.error('获取账户信息失败，请重新登录');
     await router.push({ name: 'login' });
   }
-});
-// 词数图表配置
-const wordChartOptions = ref({
-  // Word count chart options
 });
 
 // 请求流量图表配置
@@ -199,8 +221,7 @@ const todoList = ref([
   height: auto;
   border-radius: 50%;
 }
-
-.mt-20 {
-  margin-top: 20px;
+.el-table__header tr {
+  height: 30px !important;
 }
 </style>

@@ -86,7 +86,7 @@ const handleDelete = () => {
 </style>
 
 <style lang="scss" scoped>
-@import '@/assets/scss/common.scss';
+@import '@/assets/scss/common';
 .el-card {
   @include background_color('background_color_menuCard');
 }

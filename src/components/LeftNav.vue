@@ -32,6 +32,10 @@
             <el-icon><Setting /></el-icon>
             <span>个人设置</span>
           </el-menu-item>
+          <el-menu-item index="6">
+            <el-icon><Connection /></el-icon>
+            <span>引用链</span>
+          </el-menu-item>
           <div class="left-nav">
             <a class="btn" @click="modelChange">切换</a>
           </div>
@@ -43,17 +47,17 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRouter } from 'vue-router'; // 引入 useRouter
+import { useRouter } from 'vue-router';
 import {
   Setting,
   Operation,
   HomeFilled,
   EditPen,
   Picture,
-  Menu,
+  Menu, Connection
 } from "@element-plus/icons-vue";
 
-const router = useRouter(); // 获取路由实例
+const router = useRouter();
 
 // 从 localStorage 中获取之前选中的 index，如果没有则默认选中第一个菜单项
 const activeIndex = ref(localStorage.getItem('activeIndex') || '1');
@@ -64,7 +68,7 @@ const emit = defineEmits(["select"]); // 定义事件，用于向父组件传递
 const handleSelect = (index: string) => {
   activeIndex.value = index;
   localStorage.setItem('activeIndex', index); // 存储选中的 index
-  emit("select", index); // 向父组件传递选中的索引
+  emit("select", index);
 
   // 根据 index 跳转到对应的路由
   switch (index) {
@@ -80,14 +84,14 @@ const handleSelect = (index: string) => {
     case '4':
       router.push({ path: '/todo' });
       break;
-    // case '5':
-    //   router.push({ path: '/note' });
-    //   break;
     case '5':
       router.push({ path: '/setting' });
       break;
+    case '6':
+      router.push({path: '/chain'})
+      break;
     default:
-      router.push({ path: '/home' }); // 默认跳转到首页
+      router.push({ path: '/home' });
       break;
   }
 };

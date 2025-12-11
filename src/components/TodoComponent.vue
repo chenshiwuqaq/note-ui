@@ -392,7 +392,7 @@ function handleDateClick(date: any) {
 }
 
 import { onBeforeMount, ref, reactive, computed,} from "vue";
-import Thing from "@/components/thing.vue";
+import Thing from "@/components/otherComponent/thing.vue";
 import dayjs from "dayjs";
 import { ElMessage, ElMessageBox } from "element-plus";
 const authStore = useAuthStore();
@@ -751,7 +751,7 @@ async function getDate(date: {
     const formattedDate = date.day.includes("T")
       ? date.day.split("T")[0] + "T00:00:00"
       : date.day + "T00:00:00";
-      
+
     const [todoResponse, milestonesResponse] = await Promise.all([
       axios.get("http://localhost:8000/todo/getTodayTodoByAccount", {
         params: { account: Account.value, date: formattedDate }
