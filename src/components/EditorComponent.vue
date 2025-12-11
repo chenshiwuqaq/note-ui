@@ -103,6 +103,25 @@
               <el-icon>
                 <Picture />
               </el-icon>
+              <span style="font-size: 12px;margin-top: 4px">图片上传</span>
+            </template>
+          </NormalToolbar>
+
+          <NormalToolbar title="下载文件" @onClick="handleDownload">
+            <template #trigger>
+              <el-icon>
+                <Download />
+              </el-icon>
+              <span style="font-size: 12px;margin-top: 4px">下载文件</span>
+            </template>
+          </NormalToolbar>
+
+          <NormalToolbar title="导入文件" @onClick="handleImport">
+            <template #trigger>
+              <el-icon>
+                <Upload />
+              </el-icon>
+              <span style="font-size: 12px;margin-top: 4px">导入文件</span>
             </template>
           </NormalToolbar>
         </template>
@@ -158,15 +177,18 @@ import "md-editor-v3/lib/style.css";
 import { ElMessage, ElMessageBox, ElTreeV2 } from "element-plus";
 import type { TreeNodeData } from "element-plus/es/components/tree-v2/src/types";
 import axios, { AxiosError } from "axios";
-import { Fold, FolderAdd, Refresh, Search, Picture } from "@element-plus/icons-vue";
+import { Fold, FolderAdd, Refresh, Search, Picture,Download, Upload} from "@element-plus/icons-vue";
 import { useAuthStore } from "@/store/auth";
 import router from "@/router";
 import { debounce } from "lodash-es";
-
 const authStore = useAuthStore();
 const token = ref(authStore.token);
 const Account = ref("");
 const showSearchInput = ref(false);
+
+
+
+
 
 const toggleCollect = async (Node: TreeNode) => {
   try {
@@ -903,7 +925,7 @@ const allTools: ToolbarNames[] = [
   "codeRow",
   "code",
   "link",
-  "image",
+  // "image",
   "table",
   "mermaid",
   "katex",
@@ -913,15 +935,133 @@ const allTools: ToolbarNames[] = [
   "pageFullscreen",
   "fullscreen",
   "preview",
-  0  // 添加自定义工具栏位置
+  0,  // 添加自定义工具栏位置
+  1,
+  2
 ];
 
 const query = ref("");
 const onQueryChanged = (query: string) => {
   treeRef.value!.filter(query);
 };
+
 const filterMethod = (query: string, node: TreeNodeData) =>
   node.label!.includes(query);
+
+/**
+ * 处理文件下载
+ */
+const handleDownload = () => {
+  if (!selectedNode.value || selectedNode.value.children?.length) {
+    ElMessage.warning("请先选择一个**文章节点**进行下载！");
+    return;
+  }
+
+  if (!text.value.trim()) {
+    ElMessage.warning("内容为空，无法下载！");
+    return;
+  }
+
+  try {
+    // 使用节点标题作为文件名
+    const filename = `${selectedNode.value.label}.md`;
+    // 创建 Blob 对象
+    const blob = new Blob([text.value], { type: "text/markdown" });
+    // 创建一个临时的 URL
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    // 释放 URL 对象，避免内存泄漏
+    URL.revokeObjectURL(url);
+
+    ElMessage.success(`文件 **${filename}** 已开始下载`);
+  } catch (error) {
+    console.error("下载失败:", error);
+    ElMessage.error("文件下载失败，请重试");
+  }
+};
+
+const triggerFileInput = () => {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".md,.txt"; // 接受 Markdown 或纯文本文件
+
+  input.onchange = (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) {
+      if (!file.name.toLowerCase().endsWith(".md") && !file.name.toLowerCase().endsWith(".txt")) {
+        ElMessage.error("请选择 .md 或 .txt 格式的文件。");
+        return;
+      }
+      readFileContent(file);
+    }
+  };
+  input.click();
+};
+
+/**
+ * 读取文件内容并更新编辑器
+ */
+const readFileContent = (file: File) => {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const content = e.target?.result as string;
+
+    // 确保文本变化被识别为用户操作，以便正确计算字数
+    isContentChangingByUser.value = true;
+    text.value = content;
+
+    // 立即执行一次保存，将导入内容上传到后端
+    onSave();
+
+    ElMessage.success(`文件 **${file.name}** 导入成功，内容已载入编辑器。`);
+  };
+  reader.onerror = (error) => {
+    console.error("读取文件失败:", error);
+    ElMessage.error("读取文件内容失败");
+  };
+  reader.readAsText(file); // 以文本格式读取文件
+};
+
+/**
+ * 处理文件导入，包含覆盖确认
+ */
+const handleImport = () => {
+  if (!selectedNode.value || selectedNode.value.children?.length) {
+    ElMessage.warning("请先选择一个**文章节点**来导入内容！");
+    return;
+  }
+
+  // 检查当前编辑器是否有内容，需要用户确认是否覆盖
+  if (text.value.trim() !== "") {
+    ElMessageBox.confirm(
+      "当前节点已有内容，导入新文件将**覆盖**现有内容。是否继续？",
+      "确认导入",
+      {
+        confirmButtonText: "覆盖并导入",
+        cancelButtonText: "取消",
+        type: "warning"
+      }
+    )
+      .then(() => {
+        triggerFileInput();
+      })
+      .catch(() => {
+        // 用户点击取消
+      });
+  } else {
+    // 当前无内容，直接导入
+    triggerFileInput();
+  }
+};
+
+
 </script>
 
 <style scoped>
