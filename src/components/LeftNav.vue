@@ -32,6 +32,10 @@
             <el-icon><Setting /></el-icon>
             <span>个人设置</span>
           </el-menu-item>
+          <el-menu-item index="6">
+            <el-icon><CopyDocument /></el-icon>
+            <span>团队</span>
+          </el-menu-item>
           <div class="left-nav">
             <a class="btn" @click="modelChange">切换</a>
           </div>
@@ -50,6 +54,7 @@ import {
   HomeFilled,
   EditPen,
   Picture,
+  CopyDocument,
   Menu,
 } from "@element-plus/icons-vue";
 
@@ -85,6 +90,9 @@ const handleSelect = (index: string) => {
     //   break;
     case '5':
       router.push({ path: '/setting' });
+      break;
+    case '6':
+      router.push({ path: '/team'});
       break;
     default:
       router.push({ path: '/home' }); // 默认跳转到首页

@@ -76,6 +76,12 @@ const onSubmit = async () => {
       // 确保状态更新后再跳转
       await nextTick()
 
+      // 可以获取用户信息
+      const userResponse = await axios.get('http://localhost:8004/user/current')
+      if (userResponse.data.code === 200) {
+        sessionStorage.setItem('userInfo', JSON.stringify(userResponse.data.data))
+      }
+
       loginSuccess.value = true;
       // 跳转到首页
       router.push({ name: 'home' });

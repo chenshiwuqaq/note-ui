@@ -8,6 +8,22 @@
         @input="onQueryChanged"
         v-show="false"
       />
+      <div v-if="readonly" class="readonly-banner">
+        <el-alert
+            type="info"
+            :closable="false"
+            center
+            :title="`正在查看 ${Account} 的文档`"
+            show-icon
+        />
+      </div>
+      <!-- 在工具栏区域添加只读状态显示 -->
+      <div v-if="readonly" class="file-icon-box readonly">
+        <el-tag type="info" size="small">只读模式</el-tag>
+        <el-icon class="file-icon">
+          <Refresh @click="loadTree" />
+        </el-icon>
+      </div>
       <div class="file-icon-box">
         <el-icon class="file-icon">
           <FolderAdd @click="addRootNode"/>
@@ -181,27 +197,60 @@ const stopAutoSave = () => {
   }
 };
 
+// 添加props定义
+interface ReadProps {
+  account?: string  // 成员账号
+  readonly?: boolean // 是否只读模式
+}
+const read_props = withDefaults(defineProps<ReadProps>(), {
+  readonly: false
+})
 // 获取账户信息
+// const getAccount = async () => {
+//   if (!token.value) {
+//     console.error('Token为空');
+//     return null;
+//   }
+//
+//   try {
+//     const res = await axios.post('http://localhost:8005/token/getAccount', {
+//       token: token.value
+//     });
+//     Account.value = res.data;
+//     return Account.value; // 返回账户信息
+//   } catch (error) {
+//     console.error('获取账户信息失败:', error);
+//     ElMessage.error('获取账户信息失败');
+//     authStore.clearToken();
+//     return null;
+//   }
+// };
 const getAccount = async () => {
+  // 如果是只读模式，使用传入的account
+  if (read_props.readonly && read_props.account) {
+    Account.value = read_props.account
+    return Account.value
+  }
+
+  // 否则使用原来的逻辑获取当前用户account
   if (!token.value) {
-    console.error('Token为空');
-    return null;
+    console.error('Token为空')
+    return null
   }
 
   try {
     const res = await axios.post('http://localhost:8005/token/getAccount', {
       token: token.value
-    });
-    Account.value = res.data;
-    return Account.value; // 返回账户信息
+    })
+    Account.value = res.data
+    return Account.value
   } catch (error) {
-    console.error('获取账户信息失败:', error);
-    ElMessage.error('获取账户信息失败');
-    authStore.clearToken();
-    return null;
+    console.error('获取账户信息失败:', error)
+    ElMessage.error('获取账户信息失败')
+    authStore.clearToken()
+    return null
   }
-};
-
+}
 // 添加axios响应拦截器
 axios.interceptors.response.use(
   (response) => {
@@ -290,19 +339,57 @@ onUnmounted(() => {
   }
 });
 //加载树
+// const loadTree = async () => {
+//   try {
+//     const response = await axios.get("http://localhost:8003/editor/onLoad", {
+//       params: { account: Account.value },
+//       transformResponse: [(data) => {
+//         try {
+//           return JSON.parse(data);
+//         } catch (e) {
+//           console.error("JSON 解析失败:", e);
+//           return data;
+//         }
+//       }]
+//     });
+//
+//     // 递归处理，确保id始终为string类型
+//     type NormalizedTreeNode = Omit<TreeNode, 'id'> & { id: string };
+//
+//     const normalizeIds = (nodes: TreeNode[]): NormalizedTreeNode[] => {
+//       return nodes.map(node => ({
+//         ...node,
+//         id: node.id.toString(),
+//         children: node.children ? normalizeIds(node.children) : []
+//       }));
+//     };
+//     TreeData.value = normalizeIds(response.data.data);
+//     console.log("加载的树数据:", TreeData.value);
+//   } catch (error) {
+//     console.error("加载树数据失败:", error);
+//   }
+// };
+
+// 修改加载树的逻辑，使用传入的account
 const loadTree = async () => {
+  const accountToUse = read_props.readonly && read_props.account ? read_props.account : Account.value
+  if (!accountToUse) {
+    console.error('账户信息为空')
+    return
+  }
+
   try {
     const response = await axios.get("http://localhost:8003/editor/onLoad", {
-      params: { account: Account.value },
+      params: { account: accountToUse },
       transformResponse: [(data) => {
         try {
-          return JSON.parse(data);
+          return JSON.parse(data)
         } catch (e) {
-          console.error("JSON 解析失败:", e);
-          return data;
+          console.error("JSON 解析失败:", e)
+          return data
         }
       }]
-    });
+    })
 
     // 递归处理，确保id始终为string类型
     type NormalizedTreeNode = Omit<TreeNode, 'id'> & { id: string };
@@ -332,6 +419,11 @@ const calculateDepth = (node: TreeNode): number => {
   return depth;
 };
 const addRootNode = async () => {
+  // 添加只读检查
+  if (read_props.readonly) {
+    ElMessage.warning('只读模式，无法添加节点')
+    return
+  }
   const newNode: TreeNode = {
     parent: null,
     id: Date.now().toString(),  // 转换为字符串
@@ -351,6 +443,11 @@ const addRootNode = async () => {
 
 // 添加子节点
 const addChildNode = async (parentNode: TreeNode) => {
+  // 添加只读检查
+  if (read_props.readonly) {
+    ElMessage.warning('只读模式，无法添加子节点')
+    return
+  }
   if (selectedNode.value && selectedNode.value.id === parentNode.id && text.value.trim() !== "") {
     ElMessage.warning("有内容的节点不能再新增子节点！");
     return;
@@ -656,6 +753,11 @@ const handleTextChange = (value: string) => {
 
 // 保存
 const onSave = async () => {
+  // 添加只读检查
+  if (read_props.readonly) {
+    ElMessage.warning('只读模式，无法保存')
+    return
+  }
   if (!selectedNode.value) {
     ElMessage.warning("请先选择要保存的节点");
     return;
@@ -1015,5 +1117,17 @@ const filterMethod = (query: string, node: TreeNodeData) =>
   margin-left: 20px;
   color: #409EFF;
   cursor: pointer;
+}
+.readonly-banner {
+  margin-bottom: 10px;
+}
+
+.file-icon-box.readonly {
+  background-color: #f5f7fa;
+  border-bottom: 1px solid #e4e7ed;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 </style>
